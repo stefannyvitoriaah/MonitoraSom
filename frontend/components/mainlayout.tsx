@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Sidebar from "./sidebar";
+import AddAudioButton from "@/components/addaudio";
 
 interface MainLayoutProps{
     children: ReactNode;
@@ -49,13 +50,21 @@ export default function MainLayout({children}: MainLayoutProps){
 
             <div className="flex-1 min-w-0">
 
-                <div className="h-16 bg-[#FFFFFF] border-b border-[#E2E8F0] flex items-center px-6">
-                    <button onClick={alternarSidebar}
-                    className="flex flex-col items-center justify-center gap-1 p-2">
-                    <span className="w-5 h-0.5 bg-[#64748B]"></span>
-                    <span className="w-5 h-0.5 bg-[#64748B]"></span>
-                    <span className="w-5 h-0.5 bg-[#64748B]"></span>
-                    </button>
+                <div className="h-16 bg-[#FFFFFF] border-b border-[#E2E8F0] flex items-center justify-between px-6">
+                    <div className="flex items-center gap-3">
+                        {/* Botão corrigido para alinhar as linhas corretamente */}
+                        <button onClick={alternarSidebar}
+                        className="flex flex-col justify-center items-center w-8 h-8 gap-1.5 p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                            <span className="w-5 h-0.5 bg-[#64748B] rounded-full"></span>
+                            <span className="w-5 h-0.5 bg-[#64748B] rounded-full"></span>
+                            <span className="w-5 h-0.5 bg-[#64748B] rounded-full"></span>
+                        </button>
+                            <span className="text-[17px] font-medium text-[#64748B] translate-y-[2px]">
+                                Rotulação
+                            </span>
+                    </div>
+
+                    <AddAudioButton />
                 </div> 
               
                 <main className="w-full h-[calc(100vh-4rem)] bg-[#F8FAFC] overflow-auto">
