@@ -1,4 +1,13 @@
 FROM node:20-alpine
+
 WORKDIR /app
-# Mantém o container ativo aguardando o setup do Node.js pela equipe
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3333
+
 CMD ["npm", "run", "dev"]

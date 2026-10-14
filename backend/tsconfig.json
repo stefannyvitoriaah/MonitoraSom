@@ -1,3 +1,23 @@
+<<<<<<< HEAD
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
+=======
    {
      "compilerOptions": {
        "target": "ES2022",
@@ -12,3 +32,4 @@
      },
      "include": ["src", "prisma7.config.ts"]
    }
+>>>>>>> b6b5b13f0f5cd825ecc9b51bee5b214ffd1192f3

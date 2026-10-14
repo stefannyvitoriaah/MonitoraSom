@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+import app from "./app";
+
+const PORT = 3333;
+
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+=======
 import express from 'express';
 import cors from 'cors';
 
@@ -15,4 +23,5 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
+>>>>>>> b6b5b13f0f5cd825ecc9b51bee5b214ffd1192f3
 });
