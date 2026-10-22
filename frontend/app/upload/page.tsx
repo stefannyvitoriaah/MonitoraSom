@@ -1,42 +1,47 @@
 'use client';
 
-import { useState } from 'react';
-import ModalPreRotulacao from '@/components/ModalPreRotulacao';
+import { useState, useEffect } from 'react';
+import BarraProgresso from '@/components/BarraProgresso';
 
 export default function UploadPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [nomeArquivoAProcessar, setNomeArquivoAProcessar] = useState('');
+  const [progresso, setProgresso] = useState(0);
+  const [aFazerUpload, setAFazerUpload] = useState(false);
 
-  // Função que simula o fim do upload e aciona o modal
-  const simularUpload = () => {
-    setNomeArquivoAProcessar('gravacao_reuniao_01.mp4');
-    setIsModalOpen(true);
-  };
+  // Simula o progresso do upload a aumentar com o tempo
+  useEffect(() => {
+    let intervalo: NodeJS.Timeout;
+    if (aFazerUpload && progresso < 100) {
+      intervalo = setInterval(() => {
+        setProgresso((prev) => Math.min(prev + 10, 100)); // Aumenta 10% de cada vez
+      }, 500);
+    } else if (progresso >= 100) {
+      setAFazerUpload(false);
+      // Aqui entraria a chamada para abrir o Modal de Pré-rotulação (Issue #20)
+    }
+    return () => clearInterval(intervalo);
+  }, [aFazerUpload, progresso]);
 
-  const handleConfirmar = (rotulo: string) => {
-    console.log(`Rótulo confirmado: ${rotulo}`);
-    setIsModalOpen(false);
-    // Aqui entrará a lógica para enviar os dados para a tabela de áudios (Issue #18)
+  const iniciarUploadMock = () => {
+    setProgresso(0);
+    setAFazerUpload(true);
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-white">Upload de Áudio</h1>
       
-      {/* Botão temporário para simular o término do upload com sucesso */}
       <button 
-        onClick={simularUpload}
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        onClick={iniciarUploadMock}
+        disabled={aFazerUpload}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-500 w-full"
       >
-        Simular Upload Concluído
+        {aFazerUpload ? 'A enviar...' : 'Testar Barra de Progresso'}
       </button>
 
-      <ModalPreRotulacao 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={handleConfirmar}
-        nomeAudio={nomeArquivoAProcessar}
-      />
+      {/* A barra só aparece quando o upload inicia ou está concluído na tela */}
+      {(aFazerUpload || progresso > 0) && (
+        <BarraProgresso progresso={progresso} />
+      )}
     </div>
   );
 }

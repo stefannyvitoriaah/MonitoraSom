@@ -59,7 +59,7 @@ export default function MainLayout({children}: MainLayoutProps){
                             <span className="w-5 h-0.5 bg-[#64748B] rounded-full"></span>
                             <span className="w-5 h-0.5 bg-[#64748B] rounded-full"></span>
                         </button>
-                            <span className="text-[17px] font-medium text-[#64748B] translate-y-[2px]">
+                            <span className="text-[17px] font-medium text-[#64748B] translate-y-0.5">
                                 Rotulação
                             </span>
                     </div>
