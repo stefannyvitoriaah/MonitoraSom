@@ -7,8 +7,10 @@ datasource db {
 }
 
 model Audio {
-  id        String   @id @default(uuid())
-  nome      String
-  caminho   String
-  createdAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  nomeOriginal    String
+  caminhoServidor String
+  dataEnvio       DateTime @default(now())
+
+  @@map("audios")
 }
