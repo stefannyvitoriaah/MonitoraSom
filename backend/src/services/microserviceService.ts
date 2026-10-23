@@ -15,7 +15,7 @@ export async function sendAudioToMicroservice(
 
 
     const response = await axios.post(
-        "http://microservice:8000/process",
+        "http://localhost:8000/process",
         form,
         {
             headers: form.getHeaders()
