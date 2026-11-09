@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 });
 
 // ==========================================
-// ETAPA 3: Rota DELETE (Issue #27)
+// Rota DELETE (Issue #27)
 // ==========================================
 app.delete('/api/audios/:id', async (req, res) => {
   try {
@@ -40,6 +40,46 @@ app.delete('/api/audios/:id', async (req, res) => {
   } catch (error) {
     console.error('Erro ao excluir áudio:', error);
     return res.status(500).json({ error: 'Erro interno do servidor ao tentar excluir o áudio.' });
+  }
+});
+
+// ==========================================
+// Rota PUT para Atualização de Áudios (Issue #28)
+// ==========================================
+app.put('/api/audios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nomeOriginal } = req.body; // Dados enviados pelo frontend
+
+    // 1. Verifica se foi enviado o novo nome
+    if (!nomeOriginal) {
+      return res.status(400).json({ error: 'O campo nomeOriginal é obrigatório para a atualização.' });
+    }
+
+    // 2. Verifica se o áudio existe no banco de dados
+    const audioExistente = await prisma.audio.findUnique({
+      where: { id }
+    });
+
+    if (!audioExistente) {
+      return res.status(404).json({ error: 'Áudio não encontrado.' });
+    }
+
+    // 3. Atualiza o registro no banco via Prisma
+    const audioAtualizado = await prisma.audio.update({
+      where: { id },
+      data: {
+        nomeOriginal
+      }
+    });
+
+    return res.status(200).json({ 
+      message: 'Áudio atualizado com sucesso!', 
+      audio: audioAtualizado 
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar áudio:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao tentar atualizar o áudio.' });
   }
 });
 
