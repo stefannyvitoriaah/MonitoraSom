@@ -11,6 +11,20 @@ model Audio {
   nomeOriginal    String
   caminhoServidor String
   dataEnvio       DateTime @default(now())
+  
+  // Relação: Um áudio pode ter vários rótulos
+  rotulos         Rotulo[] 
 
   @@map("audios")
+}
+
+model Rotulo {
+  id        String   @id @default(uuid())
+  texto     String
+  audioId   String
+  
+  // Relação: Liga o rótulo ao áudio e define a exclusão em cascata
+  audio     Audio    @relation(fields: [audioId], references: [id], onDelete: Cascade)
+  
+  @@map("rotulos")
 }
