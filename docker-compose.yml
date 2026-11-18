@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-
   frontend:
     build:
       context: ./frontend
@@ -14,7 +11,6 @@ services:
     environment:
       - NODE_ENV=development
 
-
   backend:
     build:
       context: ./backend
@@ -23,9 +19,11 @@ services:
       - "3333:3333"
     volumes:
       - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://monitorasom_user:monitorasom_password@db:5432/monitorasom_db?schema=public
     depends_on:
+      - db
       - microservice
-
 
   microservice:
     build:
@@ -35,7 +33,6 @@ services:
       - "8000:8000"
     volumes:
       - ./microservice:/app
-
 
   db:
     image: postgres:15-alpine
@@ -47,7 +44,6 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
 
 volumes:
   pgdata:
