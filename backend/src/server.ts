@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
@@ -13,9 +16,59 @@ const port = process.env.PORT || 3333;
 app.use(cors());
 app.use(express.json());
 
+// ==========================================
+// Configuração do Multer (Issue #19)
+// ==========================================
+const uploadDir = path.resolve(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${uniqueSuffix}${ext}`);
+  }
+});
+
+const upload = multer({ storage });
+
 // Rota de teste original mantida
 app.get('/', (req, res) => {
   res.json({ message: 'API do MonitoraSom rodando perfeitamente!' });
+});
+
+// ==========================================
+// Rota POST para Recebimento/Upload (Issue #19)
+// ==========================================
+app.post('/api/audios', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo foi enviado. Use o campo "file".' });
+    }
+
+    const nomeOriginal = req.body.nomeOriginal || req.file.originalname;
+    const caminhoServidor = `uploads/${req.file.filename}`;
+
+    const novoAudio = await prisma.audio.create({
+      data: {
+        nomeOriginal,
+        caminhoServidor
+      }
+    });
+
+    return res.status(201).json({
+      message: 'Arquivo recebido e registrado com sucesso!',
+      audio: novoAudio
+    });
+  } catch (error) {
+    console.error('Erro ao realizar upload do áudio:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao salvar o arquivo.' });
+  }
 });
 
 // ==========================================
@@ -25,7 +78,6 @@ app.delete('/api/audios/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Verifica se o áudio existe antes de tentar apagar
     const audio = await prisma.audio.findUnique({
       where: { id }
     });
@@ -34,7 +86,6 @@ app.delete('/api/audios/:id', async (req, res) => {
       return res.status(404).json({ error: 'Áudio não encontrado.' });
     }
 
-    // 2. Apaga o áudio (o Prisma cuida de apagar os rótulos vinculados automaticamente via Cascade)
     await prisma.audio.delete({
       where: { id }
     });
@@ -52,14 +103,12 @@ app.delete('/api/audios/:id', async (req, res) => {
 app.put('/api/audios/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nomeOriginal } = req.body; // Dados enviados pelo frontend
+    const { nomeOriginal } = req.body;
 
-    // 1. Verifica se foi enviado o novo nome
     if (!nomeOriginal) {
       return res.status(400).json({ error: 'O campo nomeOriginal é obrigatório para a atualização.' });
     }
 
-    // 2. Verifica se o áudio existe no banco de dados
     const audioExistente = await prisma.audio.findUnique({
       where: { id }
     });
@@ -68,7 +117,6 @@ app.put('/api/audios/:id', async (req, res) => {
       return res.status(404).json({ error: 'Áudio não encontrado.' });
     }
 
-    // 3. Atualiza o registro no banco via Prisma
     const audioAtualizado = await prisma.audio.update({
       where: { id },
       data: {
@@ -76,9 +124,9 @@ app.put('/api/audios/:id', async (req, res) => {
       }
     });
 
-    return res.status(200).json({ 
-      message: 'Áudio atualizado com sucesso!', 
-      audio: audioAtualizado 
+    return res.status(200).json({
+      message: 'Áudio atualizado com sucesso!',
+      audio: audioAtualizado
     });
   } catch (error) {
     console.error('Erro ao atualizar áudio:', error);
