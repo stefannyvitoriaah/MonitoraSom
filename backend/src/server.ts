@@ -149,7 +149,7 @@ app.post('/api/audios', upload.single('file'), async (req, res) => {
 });
 
 // ==========================================
-// Rota DELETE (Issue #27)
+// Rota DELETE de Áudios (Issue #27)
 // ==========================================
 app.delete('/api/audios/:id', async (req, res) => {
   try {
@@ -208,6 +208,125 @@ app.put('/api/audios/:id', async (req, res) => {
   } catch (error) {
     console.error('Erro ao atualizar áudio:', error);
     return res.status(500).json({ error: 'Erro interno do servidor ao tentar atualizar o áudio.' });
+  }
+});
+
+// ==========================================
+// Rotas CRUD de Rótulos (Issue #55)
+// ==========================================
+
+// Listar todos os rótulos de um áudio específico
+app.get('/api/audios/:audioId/rotulos', async (req, res) => {
+  try {
+    const { audioId } = req.params;
+
+    const audioExistente = await prisma.audio.findUnique({
+      where: { id: audioId },
+      include: { rotulos: true }
+    });
+
+    if (!audioExistente) {
+      return res.status(404).json({ error: 'Áudio não encontrado.' });
+    }
+
+    return res.status(200).json(audioExistente.rotulos);
+  } catch (error) {
+    console.error('Erro ao listar rótulos do áudio:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao listar os rótulos.' });
+  }
+});
+
+// Criar um novo rótulo associado a um áudio
+app.post('/api/audios/:audioId/rotulos', async (req, res) => {
+  try {
+    const { audioId } = req.params;
+    const { texto } = req.body;
+
+    if (typeof texto !== 'string' || !texto.trim()) {
+      return res.status(400).json({ error: 'O campo "texto" é obrigatório e não pode estar vazio.' });
+    }
+
+    const audioExistente = await prisma.audio.findUnique({
+      where: { id: audioId }
+    });
+
+    if (!audioExistente) {
+      return res.status(404).json({ error: 'Áudio não encontrado para vincular o rótulo.' });
+    }
+
+    const novoRotulo = await prisma.rotulo.create({
+      data: {
+        texto: texto.trim(),
+        audioId
+      }
+    });
+
+    return res.status(201).json({
+      message: 'Rótulo criado com sucesso!',
+      rotulo: novoRotulo
+    });
+  } catch (error) {
+    console.error('Erro ao criar rótulo:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao criar o rótulo.' });
+  }
+});
+
+// Atualizar o texto de um rótulo específico
+app.put('/api/rotulos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { texto } = req.body;
+
+    if (typeof texto !== 'string' || !texto.trim()) {
+      return res.status(400).json({ error: 'O campo "texto" é obrigatório e não pode estar vazio.' });
+    }
+
+    const rotuloExistente = await prisma.rotulo.findUnique({
+      where: { id }
+    });
+
+    if (!rotuloExistente) {
+      return res.status(404).json({ error: 'Rótulo não encontrado.' });
+    }
+
+    const rotuloAtualizado = await prisma.rotulo.update({
+      where: { id },
+      data: {
+        texto: texto.trim()
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Rótulo atualizado com sucesso!',
+      rotulo: rotuloAtualizado
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar rótulo:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao atualizar o rótulo.' });
+  }
+});
+
+// Excluir um rótulo específico (sem excluir o áudio pai)
+app.delete('/api/rotulos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rotuloExistente = await prisma.rotulo.findUnique({
+      where: { id }
+    });
+
+    if (!rotuloExistente) {
+      return res.status(404).json({ error: 'Rótulo não encontrado.' });
+    }
+
+    await prisma.rotulo.delete({
+      where: { id }
+    });
+
+    return res.status(200).json({ message: 'Rótulo excluído com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao excluir rótulo:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao excluir o rótulo.' });
   }
 });
 
