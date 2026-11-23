@@ -17,12 +17,14 @@ app.use(cors());
 app.use(express.json());
 
 // ==========================================
-// Configuração do Multer (Issue #19)
+// Configuração do Multer e Arquivos Estáticos (Issue #19 / #54)
 // ==========================================
 const uploadDir = path.resolve(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+app.use('/uploads', express.static(uploadDir));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -40,6 +42,81 @@ const upload = multer({ storage });
 // Rota de teste original mantida
 app.get('/', (req, res) => {
   res.json({ message: 'API do MonitoraSom rodando perfeitamente!' });
+});
+
+// ==========================================
+// Rota GET para Listagem e Histórico de Áudios (Issue #54)
+// ==========================================
+app.get('/api/audios', async (req, res) => {
+  try {
+    const search =
+      typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+    const audios = await prisma.audio.findMany({
+      where: search
+        ? {
+            OR: [
+              {
+                nomeOriginal: {
+                  contains: search,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                rotulos: {
+                  some: {
+                    texto: {
+                      contains: search,
+                      mode: 'insensitive'
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        : undefined,
+      include: {
+        rotulos: true
+      },
+      orderBy: {
+        dataEnvio: 'desc'
+      }
+    });
+
+    return res.status(200).json(audios);
+  } catch (error) {
+    console.error('Erro ao listar áudios:', error);
+    return res.status(500).json({
+      error: 'Erro interno do servidor ao consultar os áudios.'
+    });
+  }
+});
+
+// ==========================================
+// Rota GET para Detalhes de um Áudio Específico (Issue #54)
+// ==========================================
+app.get('/api/audios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const audio = await prisma.audio.findUnique({
+      where: { id },
+      include: {
+        rotulos: true
+      }
+    });
+
+    if (!audio) {
+      return res.status(404).json({ error: 'Áudio não encontrado.' });
+    }
+
+    return res.status(200).json(audio);
+  } catch (error) {
+    console.error('Erro ao buscar detalhes do áudio:', error);
+    return res.status(500).json({
+      error: 'Erro interno do servidor ao buscar o áudio.'
+    });
+  }
 });
 
 // ==========================================
