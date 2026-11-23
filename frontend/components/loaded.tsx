@@ -1,5 +1,13 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+import AcoesTabela from "@/components/acoestabela";
+import {
+  excluirAudio,
+  editarAudio,
+  listarAudios,
+} from "@/services/audioActionsService";
+
 interface ItemData {
   id: string;
   name: string;
@@ -20,13 +28,8 @@ interface UploadsSidebarProps{
     iconBackground?: string;};
 }
 export default function UploadsSidebar({
-  folders = [
-    { id: "1", name: "Gravacoes_Mata1", current: 2, total: 5 },
-    { id: "2", name: "Gravacoes_Mata2", current: 4, total: 7 },],
-  files = [
-    { id: "1", name: "gravacao_01.wav", current: 1, total: 1 },
-    { id: "2", name: "gravacao_02.wav", current: 1, total: 1 },
-    { id: "3", name: "gravacao_03.wav", current: 1, total: 1 },],
+  folders = [],
+  files,
   onSelectFolder,
   onSelectFile,
   folderProgressColor = "#4F46E5",
@@ -38,6 +41,79 @@ export default function UploadsSidebar({
     iconBackground: "bg-indigo-100",},
 }:
   UploadsSidebarProps){
+  const [arquivos, setArquivos] = useState<ItemData[]>(files ?? []);
+  const [carregando, setCarregando] = useState(files === undefined);
+  const [idEmAcao, setIdEmAcao] = useState<string | null>(null);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
+
+  const carregarArquivos = useCallback(async () => {
+    try {
+      const audios = await listarAudios();
+      setArquivos(
+        audios.map((audio) =>({
+          id: audio.id,
+          name: audio.nomeOriginal,
+          current: 1,
+          total: 1,
+        }))
+      );
+      setErroAcao(null);
+    } catch (error) {
+      setErroAcao(
+        error instanceof Error ? error.message : "Erro ao carregar os áudios."
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (files !== undefined) return;
+    void carregarArquivos();
+
+    const handleAtualizar = () => void carregarArquivos();
+    window.addEventListener("audios:atualizados", handleAtualizar);
+    return () =>
+      window.removeEventListener("audios:atualizados", handleAtualizar);
+  }, [files, carregarArquivos]);
+
+  const handleExcluirArquivo = async (file: ItemData) => {
+    setErroAcao(null);
+    setIdEmAcao(file.id);
+    try {
+      await excluirAudio(file.id);
+      setArquivos((atuais) => atuais.filter((a) => a.id !== file.id));
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Erro ao excluir.");
+    } finally {
+      setIdEmAcao(null);
+    }
+  };
+
+  const handleEditarArquivo = async (file: ItemData) => {
+    const novoNome = window.prompt("Novo nome:", file.name)?.trim();
+    if (!novoNome || novoNome === file.name) return;
+
+    setErroAcao(null);
+    setIdEmAcao(file.id);
+    try {
+      const audio = await editarAudio(file.id, novoNome);
+      setArquivos((atuais) =>
+        atuais.map((a) =>
+          a.id === file.id ? { ...a, name: audio.nomeOriginal } : a
+        )
+      );
+    } catch (error) {
+      setErroAcao(error instanceof Error ? error.message : "Erro ao editar.");
+    } finally {
+      setIdEmAcao(null);
+    }
+  };
+
+  const handleCopiarArquivo = (file: ItemData) =>{
+    console.log("copiar", file.id);
+  };
+
   return (
     <div className="flex flex-col gap-2.5 w-full max-w-xs h-full">
 
@@ -52,6 +128,9 @@ export default function UploadsSidebar({
         </div>
 
         <div className="overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
+          {folders.length === 0 && (
+            <p className="text-xs text-gray-400">Nenhuma pasta enviada ainda.</p>
+          )}
           {folders.map((folder) => {
             const progressPercent =
               folder.total > 0
@@ -104,7 +183,13 @@ export default function UploadsSidebar({
         </div>
 
         <div className="overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
-          {files.map((file) => (
+          {carregando && (
+            <p className="text-xs text-gray-400">Carregando...</p>
+          )}
+          {!carregando && arquivos.length === 0 && (
+            <p className="text-xs text-gray-400">Nenhum áudio enviado ainda.</p>
+          )}
+          {arquivos.map((file) => (
             <div key={file.id}
               onClick={() => onSelectFile?.(file)}
               className={`${fileColors.background ?? "bg-gray-50"} ${fileColors.hover ?? "hover:bg-gray-100/80"} border ${fileColors.border ?? "border-gray-200/60"} rounded-xl p-3 cursor-pointer transition-colors flex items-center gap-2`}>
@@ -122,12 +207,30 @@ export default function UploadsSidebar({
                     d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                 </svg>
               </div>
-              <span className="text-xs font-medium text-gray-800 truncate">
+              <span className="text-xs font-medium text-gray-800 truncate flex-1 min-w-0">
                 {file.name}
               </span>
+              <div onClick={(e) => e.stopPropagation()}>
+                <AcoesTabela
+                  compacto
+                  disabled={idEmAcao === file.id}
+                  onEditar={() => void handleEditarArquivo(file)}
+                  onExcluir={() => void handleExcluirArquivo(file)}
+                  onCopiar={() => handleCopiarArquivo(file)}
+                />
+              </div>
             </div>
           ))}
         </div>
+
+        {erroAcao && (
+          <div
+            role="alert"
+            className="mt-2 px-3 py-2 text-xs rounded-lg bg-red-50 text-red-700 border border-red-200"
+          >
+            {erroAcao}
+          </div>
+        )}
       </div>
     </div>
   );

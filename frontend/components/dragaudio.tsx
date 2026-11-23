@@ -43,6 +43,7 @@ export default function AudioDropzone({
 
     if (uploadedAudios.length > 0) {
       onUploadSuccess?.(uploadedAudios);
+      window.dispatchEvent(new Event("audios:atualizados"));
       setStatusMessage(
         `${uploadedAudios.length} arquivo(s) enviado(s) e salvo(s) com sucesso!`
       );

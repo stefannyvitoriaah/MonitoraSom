@@ -134,6 +134,20 @@ app.put('/api/audios/:id', async (req, res) => {
   }
 });
 
+// Listagem de audios
+app.get('/api/audios', async (req, res) => {
+  try {
+    const audios = await prisma.audio.findMany({
+      orderBy: { dataEnvio: 'desc' }
+    });
+
+    return res.status(200).json({ audios });
+  } catch (error) {
+    console.error('Erro ao listar áudios:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor ao listar os áudios.' });
+  }
+});
+
 // Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
