@@ -4,24 +4,25 @@ import { useState, useEffect, useCallback } from "react";
 
 export interface SoundSettings {
   // Player de áudio
-  volume: number;              // 0 a 100
-  muted: boolean;              // iniciar silenciado
-  playbackRate: number;        // 0.5 a 2.0
-  autoPlay: boolean;           // reproduzir automaticamente ao abrir áudio
-  loop: boolean;               // repetir áudio em loop
+  volume: number;
+  muted: boolean;
+  playbackRate: number;
+  autoPlay: boolean;
+  loop: boolean;
 
   // Sons do sistema
-  systemSounds: boolean;       // ativar/desativar sons da interface
-  systemVolume: number;        // 0 a 100
-  uploadSuccessSound: boolean; // alerta sonoro ao concluir upload
-  errorAlertSound: boolean;    // alerta sonoro em erros
+  systemSounds: boolean;
+  systemVolume: number;
+  uploadSuccessSound: boolean;
+  errorAlertSound: boolean;
 
   // Preferências do usuário
-  keyboardShortcuts: boolean;  // atalhos de teclado no player/rotulação
-  confirmBeforeDelete: boolean;// pedir confirmação antes de excluir áudios
+  keyboardShortcuts: boolean;
+  confirmBeforeDelete: boolean;
 }
 
 export const SOUND_SETTINGS_STORAGE_KEY = "monitorasom:sound-settings";
+const SOUND_SETTINGS_UPDATED_EVENT = "monitorasom:sound-settings-updated";
 
 export const DEFAULT_SOUND_SETTINGS: SoundSettings = {
   volume: 80,
@@ -104,6 +105,18 @@ function loadSettingsFromStorage(): SoundSettings {
   }
 }
 
+function saveSettingsToStorage(settings: SoundSettings) {
+  try {
+    window.localStorage.setItem(
+      SOUND_SETTINGS_STORAGE_KEY,
+      JSON.stringify(settings)
+    );
+    window.dispatchEvent(new Event(SOUND_SETTINGS_UPDATED_EVENT));
+  } catch (error) {
+    console.error("Erro ao salvar preferências de som no localStorage:", error);
+  }
+}
+
 export function useSoundSettings() {
   const [settings, setSettings] = useState<SoundSettings>(DEFAULT_SOUND_SETTINGS);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -112,41 +125,36 @@ export function useSoundSettings() {
     setSettings(loadSettingsFromStorage());
     setIsLoaded(true);
 
+    const syncFromStorage = () => {
+      setSettings(loadSettingsFromStorage());
+    };
+
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === SOUND_SETTINGS_STORAGE_KEY) {
-        setSettings(loadSettingsFromStorage());
+        syncFromStorage();
       }
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener(SOUND_SETTINGS_UPDATED_EVENT, syncFromStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(SOUND_SETTINGS_UPDATED_EVENT, syncFromStorage);
+    };
   }, []);
 
   const updateSettings = useCallback((partial: Partial<SoundSettings>) => {
     setSettings((prev) => {
       const updated = { ...prev, ...partial };
-      try {
-        window.localStorage.setItem(
-          SOUND_SETTINGS_STORAGE_KEY,
-          JSON.stringify(updated)
-        );
-      } catch (error) {
-        console.error("Erro ao salvar preferências de som no localStorage:", error);
-      }
+      saveSettingsToStorage(updated);
       return updated;
     });
   }, []);
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SOUND_SETTINGS);
-    try {
-      window.localStorage.setItem(
-        SOUND_SETTINGS_STORAGE_KEY,
-        JSON.stringify(DEFAULT_SOUND_SETTINGS)
-      );
-    } catch (error) {
-      console.error("Erro ao restaurar preferências de som:", error);
-    }
+    saveSettingsToStorage(DEFAULT_SOUND_SETTINGS);
   }, []);
 
   return {

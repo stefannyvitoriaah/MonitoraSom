@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/mainlayout";
-import { useSoundSettings, SoundSettings } from "../hooks/useSoundSettings";
+import { useSoundSystem } from "@/contexts/SoundContext";
+import { SoundSettings } from "../hooks/useSoundSettings";
+import { SystemSoundEvent } from "@/services/systemSoundService";
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -62,48 +64,15 @@ function ToggleSwitch({
   );
 }
 
-function playTestBeep(volumePercent: number) {
-  if (typeof window === "undefined") return;
-
-  try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as Window & { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-
-    if (!AudioCtx) return;
-
-    const ctx = new AudioCtx();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    oscillator.frequency.exponentialRampToValueAtTime(
-      880,
-      ctx.currentTime + 0.12
-    ); // A5
-
-    const normalizedGain = Math.max(0.01, (volumePercent / 100) * 0.25);
-    gainNode.gain.setValueAtTime(normalizedGain, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.25);
-    oscillator.onended = () => {
-      void ctx.close();
-    };
-  } catch (error) {
-    console.warn("Não foi possível reproduzir o som de teste:", error);
-  }
-}
-
 export default function ConfiguracoesPage() {
-  const { settings, isLoaded, updateSettings, resetSettings } =
-    useSoundSettings();
+  const {
+    settings,
+    isLoaded,
+    updateSettings,
+    resetSettings,
+    setGlobalSystemVolume,
+    playSound,
+  } = useSoundSystem();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const showFeedback = (message: string) => {
@@ -123,19 +92,21 @@ export default function ConfiguracoesPage() {
     showFeedback("Configurações restauradas para o padrão.");
   };
 
-  const handleTestSystemSound = () => {
-    if (!settings.systemSounds || settings.systemVolume === 0) {
-      showFeedback("Ative os sons do sistema para ouvir o teste.");
+  const handleTestEventSound = async (
+    event: SystemSoundEvent,
+    label: string
+  ) => {
+    const played = await playSound(event, { ignoreEventToggle: true });
+    if (!played) {
+      showFeedback("Ative os sons do sistema e ajuste o volume acima de 0%.");
       return;
     }
-    playTestBeep(settings.systemVolume);
-    showFeedback(`Som de teste reproduzido a ${settings.systemVolume}%.`);
+    showFeedback(`Som de ${label} reproduzido a ${settings.systemVolume}%.`);
   };
 
   return (
     <MainLayout title="Configurações Gerais">
       <div className="max-w-4xl mx-auto p-6 lg:p-8 space-y-6">
-        {/* Cabeçalho da seção */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
@@ -169,7 +140,6 @@ export default function ConfiguracoesPage() {
           </button>
         </div>
 
-        {/* Feedback de salvamento */}
         {statusMessage && (
           <div
             role="status"
@@ -200,7 +170,7 @@ export default function ConfiguracoesPage() {
           <div className="space-y-6">
             {/* Card 1: Sons do Sistema */}
             <section className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between gap-4">
+              <div className="px-6 py-4 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-cyan-800/10 text-[#06B6D4] flex items-center justify-center shrink-0">
                     <svg
@@ -222,19 +192,42 @@ export default function ConfiguracoesPage() {
                       Sons do Sistema
                     </h2>
                     <p className="text-xs text-[#64748B]">
-                      Notificações e sinais sonoros para ações na plataforma.
+                      Volume global para notificações e eventos em toda a
+                      plataforma.
                     </p>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleTestSystemSound}
-                  disabled={!settings.systemSounds}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-200 bg-indigo-50 text-[#4F46E5] hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
-                >
-                  Testar som
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleTestEventSound("notification", "notificação")
+                    }
+                    disabled={!settings.systemSounds || settings.systemVolume === 0}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-200 bg-indigo-50 text-[#4F46E5] hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    Testar notificação
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleTestEventSound("success", "sucesso")
+                    }
+                    disabled={!settings.systemSounds || settings.systemVolume === 0}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    Testar sucesso
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleTestEventSound("error", "erro")}
+                    disabled={!settings.systemSounds || settings.systemVolume === 0}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    Testar erro
+                  </button>
+                </div>
               </div>
 
               <div className="px-6 py-4 divide-y divide-slate-100">
@@ -258,12 +251,12 @@ export default function ConfiguracoesPage() {
                       htmlFor="system-volume"
                       className="text-sm font-medium text-slate-800"
                     >
-                      Volume dos alertas do sistema
+                      Volume global dos alertas do sistema
                     </label>
                     <span className="text-xs font-mono font-semibold text-[#4F46E5] bg-indigo-50 px-2 py-0.5 rounded-md">
-                      {settings.systemSounds
-                        ? `${settings.systemVolume}%`
-                        : "Desativado"}
+                      {!settings.systemSounds || settings.systemVolume === 0
+                        ? "Silenciado (0%)"
+                        : `${settings.systemVolume}%`}
                     </span>
                   </div>
                   <input
@@ -273,9 +266,10 @@ export default function ConfiguracoesPage() {
                     max={100}
                     value={settings.systemVolume}
                     disabled={!settings.systemSounds}
-                    onChange={(e) =>
-                      handleUpdate({ systemVolume: Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      setGlobalSystemVolume(Number(e.target.value));
+                      showFeedback("Volume global atualizado.");
+                    }}
                     className="w-full accent-[#4F46E5] cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
@@ -334,7 +328,6 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="px-6 py-4 divide-y divide-slate-100">
-                {/* Volume do Player */}
                 <div className="py-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <label
@@ -361,7 +354,6 @@ export default function ConfiguracoesPage() {
                   />
                 </div>
 
-                {/* Velocidade de reprodução em botões */}
                 <div className="py-4 space-y-2.5">
                   <div>
                     <span className="block text-sm font-medium text-slate-800">
