@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { uploadAudio, AudioRecord } from "@/services/audioService";
+import { useSoundSystem } from "@/contexts/SoundContext";
 
 interface AudioDropzoneProps {
   onDropFiles?: (files: FileList) => void;
@@ -13,6 +14,7 @@ export default function AudioDropzone({
   onUploadSuccess,
 }: AudioDropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { playSound } = useSoundSystem();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export default function AudioDropzone({
       setStatusMessage(
         `${uploadedAudios.length} arquivo(s) enviado(s) e salvo(s) com sucesso!`
       );
+      void playSound("success");
     } else {
       setStatusMessage(null);
     }
@@ -55,6 +58,7 @@ export default function AudioDropzone({
       setErrorMessage(
         `Falha ao enviar: ${failedFiles.join(", ")}. Verifique se o backend está rodando.`
       );
+      void playSound("error");
     }
   };
 
