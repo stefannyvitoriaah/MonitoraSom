@@ -43,6 +43,9 @@ export async function listarAudios(): Promise<AudioAtualizado[]> {
   if (!response.ok) {
     throw new Error(data.error || "Falha ao carregar os áudios.");
   }
+  if (Array.isArray(data)) {
+    return data as AudioAtualizado[];
+  }
   return (data.audios ?? []) as AudioAtualizado[];
 }
 
