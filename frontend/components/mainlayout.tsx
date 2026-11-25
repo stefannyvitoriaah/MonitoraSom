@@ -69,7 +69,11 @@ export default function MainLayout({
             </span>
           </div>
 
-          <AddAudioButton />
+          <AddAudioButton
+            onUploadSuccess={() =>
+              window.dispatchEvent(new Event("audios:atualizados"))
+            }
+          />
         </div>
 
         <main className="w-full h-[calc(100vh-4rem)] bg-[#F8FAFC] overflow-auto">
