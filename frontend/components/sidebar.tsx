@@ -11,6 +11,7 @@ interface SidebarProps {
 export default function Sidebar({ aberta, animar }: SidebarProps) {
   const pathname = usePathname();
   const isRotulacao = pathname === "/" || pathname.startsWith("/rotulacao");
+  const isHistorico = pathname.startsWith("/historico");
   const isConfiguracoes = pathname.startsWith("/configuracoes");
 
   return (
@@ -94,6 +95,33 @@ export default function Sidebar({ aberta, animar }: SidebarProps) {
                 />
                 <span>Rotulação</span>
               </Link>
+
+              <Link
+                href="/historico"
+                title="Histórico de Áudios"
+                className={`px-3 py-3 w-full flex items-center justify-start gap-2.5 rounded-xl border transition-all ${
+                  isHistorico
+                    ? "bg-cyan-800/10 border-cyan-600/20 text-[#4F46E5] font-semibold hover:bg-cyan-700/20"
+                    : "bg-transparent border-transparent text-[#64748B] font-medium hover:bg-slate-100"
+                }`}
+              >
+                <svg
+                  className={`h-5 w-5 ${
+                    isHistorico ? "text-[#4F46E5]" : "text-[#64748B]"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>Histórico</span>
+              </Link>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -151,6 +179,30 @@ export default function Sidebar({ aberta, animar }: SidebarProps) {
                 alt="Rotulação"
                 className="h-6 w-auto"
               />
+            </Link>
+
+            <Link
+              href="/historico"
+              title="Histórico de Áudios"
+              className={`p-2.5 w-12 h-11 flex items-center justify-center rounded-xl border transition-all ${
+                isHistorico
+                  ? "bg-cyan-800/10 border-cyan-600/20 text-[#4F46E5] hover:bg-cyan-700/20"
+                  : "bg-transparent border-transparent text-[#64748B] hover:bg-slate-100"
+              }`}
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </Link>
 
             <Link

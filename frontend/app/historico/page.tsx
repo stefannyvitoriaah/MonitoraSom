@@ -1,88 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AudioRecord, listarAudios } from "@/services/audioService";
-
+import { useState } from "react";
+import MainLayout from "@/components/mainlayout";
+import HistoricoLista from "@/components/HistoricoLista";
 
 export default function HistoricoPage() {
-
-  const [audios, setAudios] = useState<AudioRecord[]>([]);
-  const [erro, setErro] = useState<string>("");
-
-
-  async function carregarAudios() {
-    try {
-
-      const dados = await listarAudios();
-
-      setAudios(dados);
-
-    } catch (error) {
-
-      console.error(error);
-
-      setErro("Não foi possível carregar os áudios.");
-
-    }
-  }
-
-
-  useEffect(() => {
-
-    carregarAudios();
-
-  }, []);
-
+  const [total, setTotal] = useState(0);
 
   return (
-    <div className="p-8">
+    <MainLayout title="Histórico">
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-slate-900">
+              Histórico de Áudios
+            </h1>
+            <p className="text-sm text-[#64748B] mt-1">
+              Todos os áudios enviados e processados, com seus rótulos e ações
+              rápidas.
+            </p>
+          </div>
 
-      <h1 className="text-2xl font-bold mb-4">
-        Histórico de Áudios
-      </h1>
-
-
-      {erro && (
-        <p className="text-red-500">
-          {erro}
-        </p>
-      )}
-
-
-      {audios.length === 0 ? (
-
-        <p>
-          Nenhum áudio encontrado.
-        </p>
-
-      ) : (
-
-        <div className="space-y-3">
-
-          {audios.map((audio) => (
-
-            <div
-              key={audio.id}
-              className="border rounded p-4"
-            >
-
-              <p>
-                <strong>Nome:</strong> {audio.nomeOriginal}
-              </p>
-
-              <p>
-                <strong>Data:</strong>{" "}
-                {new Date(audio.dataEnvio).toLocaleString()}
-              </p>
-
-            </div>
-
-          ))}
-
+          <span className="shrink-0 px-3 py-1 text-xs font-semibold text-[#4F46E5] bg-indigo-50 border border-indigo-100 rounded-lg">
+            {total} {total === 1 ? "áudio" : "áudios"}
+          </span>
         </div>
 
-      )}
-
-    </div>
+        <HistoricoLista onTotalChange={setTotal} />
+      </div>
+    </MainLayout>
   );
 }

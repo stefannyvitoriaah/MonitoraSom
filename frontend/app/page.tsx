@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/mainlayout";
 import UploadsSidebar from "@/components/loaded";
 import AudioDropzone from "@/components/dragaudio";
 import RotulacaoWorkspace from "@/components/RotulacaoWorkspace";
 
-export default function Home() {
+function HomeConteudo() {
+  const searchParams = useSearchParams();
   const [audioSelecionadoId, setAudioSelecionadoId] = useState<string | null>(
-    null
+    () => searchParams.get("audio")
   );
 
   return (
@@ -43,5 +45,13 @@ export default function Home() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeConteudo />
+    </Suspense>
   );
 }
