@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import FormularioRotulacao, {
+  type DadosRotulo,
+} from "@/components/FormularioRotulacao";
 import PainelRotulos from "@/components/PainelRotulos";
 import VisualizadorAudio from "@/components/VisualizadorAudio";
 import { useSoundSystem } from "@/contexts/SoundContext";
@@ -141,6 +144,21 @@ export default function RotulacaoWorkspace({
     }
   };
 
+  const adicionar = async (dados: DadosRotulo) => {
+    setErroExclusao(null);
+    try {
+      const novo = await criarRotulo(audioId, dados.texto);
+      setRotulosDados((d) =>
+        d && d.audioId === audioId ? { ...d, itens: [...d.itens, novo] } : d
+      );
+      ajustarTotal(audioId, 1);
+      void playSound("success");
+    } catch (error) {
+      void playSound("error");
+      throw error;
+    }
+  };
+
   const selecionar = (id: string) => {
     setErroExclusao(null);
     onSelecionarAudio(id);
@@ -206,6 +224,17 @@ export default function RotulacaoWorkspace({
       <VisualizadorAudio
         key={atual.id}
         audioUrl={montarUrlAudio(atual.caminhoServidor)}
+      />
+
+      <FormularioRotulacao
+        audios={lista.map((a) => ({ id: a.id, nome: a.nomeOriginal }))}
+        audioAtualId={atual.id}
+        anteriorId={vizinho(-1, false)}
+        proximoId={vizinho(1, false)}
+        anteriorNaoRotuladoId={vizinho(-1, true)}
+        proximoNaoRotuladoId={vizinho(1, true)}
+        onSelecionarAudio={selecionar}
+        onAdicionar={adicionar}
       />
 
       <PainelRotulos
