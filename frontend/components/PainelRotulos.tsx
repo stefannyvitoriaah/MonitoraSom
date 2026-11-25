@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { RotuloRegistro } from "@/services/rotuloService";
 import styles from "./rotulacao.module.css";
 
@@ -7,7 +8,10 @@ interface PainelRotulosProps {
   rotulos: RotuloRegistro[] | null;
   erro: string | null;
   idExcluindo: string | null;
+
   onRemover: (rotulo: RotuloRegistro) => void;
+
+  onAdicionar: (texto: string) => void;
 }
 
 export default function PainelRotulos({
@@ -15,9 +19,11 @@ export default function PainelRotulos({
   erro,
   idExcluindo,
   onRemover,
+  onAdicionar,
 }: PainelRotulosProps) {
   const carregando = rotulos === null && !erro;
   const total = rotulos?.length ?? 0;
+  const [texto, setTexto] = useState("");
 
   return (
     <div className={styles.rotulos}>
@@ -25,6 +31,24 @@ export default function PainelRotulos({
         Rótulos do arquivo
         <span className={styles.contagem}>({total})</span>
       </div>
+        <div>
+    <input
+      type="text"
+      value={texto}
+      placeholder="Digite um rótulo"
+      onChange={(e) => setTexto(e.target.value)}
+    />
+
+    <button
+      type="button"
+      onClick={() => {
+        onAdicionar(texto);
+        setTexto("");
+      }}
+    >
+      Adicionar rótulo
+    </button>
+  </div>
 
       {carregando && <span className={styles.vazio}>Carregando...</span>}
       {rotulos && rotulos.length === 0 && !erro && (
