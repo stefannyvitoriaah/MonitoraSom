@@ -81,20 +81,29 @@ export default function UploadsSidebar({
       window.removeEventListener("audios:atualizados", handleAtualizar);
   }, [files, carregarArquivos]);
 
-  const handleExcluirArquivo = async (file: ItemData) => {
-    setErroAcao(null);
-    setIdEmAcao(file.id);
-    try {
-      await excluirAudio(file.id);
-      setArquivos((atuais) => atuais.filter((a) => a.id !== file.id));
-      onFileDeleted?.(file);
-      window.dispatchEvent(new Event("audios:atualizados"));
-    } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Erro ao excluir.");
-    } finally {
-      setIdEmAcao(null);
-    }
-  };
+const handleExcluirArquivo = async (file: ItemData) => {
+  const confirmar = window.confirm(
+    `Tem certeza que deseja excluir o áudio "${file.name}"?`
+  );
+
+  if (!confirmar) {
+    return;
+  }
+
+  setErroAcao(null);
+  setIdEmAcao(file.id);
+
+  try {
+    await excluirAudio(file.id);
+    setArquivos((atuais) => atuais.filter((a) => a.id !== file.id));
+    onFileDeleted?.(file);
+    window.dispatchEvent(new Event("audios:atualizados"));
+  } catch (error) {
+    setErroAcao(error instanceof Error ? error.message : "Erro ao excluir.");
+  } finally {
+    setIdEmAcao(null);
+  }
+};
 
   const handleEditarArquivo = async (file: ItemData) => {
     const novoNome = window.prompt("Novo nome:", file.name)?.trim();
