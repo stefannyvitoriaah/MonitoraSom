@@ -19,6 +19,8 @@ interface UploadsSidebarProps{
   files?: ItemData[];
   onSelectFolder?: (folder: ItemData) => void;
   onSelectFile?: (file: ItemData) => void;
+  onFileDeleted?: (file: ItemData) => void;
+  selectedFileId?: string | null;
   folderProgressColor?: string;
   fileColors?: {
     background?: string;
@@ -32,6 +34,8 @@ export default function UploadsSidebar({
   files,
   onSelectFolder,
   onSelectFile,
+  onFileDeleted,
+  selectedFileId = null,
   folderProgressColor = "#4F46E5",
   fileColors = {
     background: "bg-indigo-50/50",
@@ -83,6 +87,8 @@ export default function UploadsSidebar({
     try {
       await excluirAudio(file.id);
       setArquivos((atuais) => atuais.filter((a) => a.id !== file.id));
+      onFileDeleted?.(file);
+      window.dispatchEvent(new Event("audios:atualizados"));
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Erro ao excluir.");
     } finally {
@@ -192,7 +198,9 @@ export default function UploadsSidebar({
           {arquivos.map((file) => (
             <div key={file.id}
               onClick={() => onSelectFile?.(file)}
-              className={`${fileColors.background ?? "bg-gray-50"} ${fileColors.hover ?? "hover:bg-gray-100/80"} border ${fileColors.border ?? "border-gray-200/60"} rounded-xl p-3 cursor-pointer transition-colors flex items-center gap-2`}>
+              className={`${fileColors.background ?? "bg-gray-50"} ${fileColors.hover ?? "hover:bg-gray-100/80"} border ${fileColors.border ?? "border-gray-200/60"} rounded-xl p-3 cursor-pointer transition-colors flex items-center gap-2 ${
+                selectedFileId === file.id ? "ring-2 ring-indigo-400" : ""
+              }`}>
               <div
                 className={`${fileColors.icon ?? "text-indigo-600"} ${fileColors.iconBackground ?? "bg-indigo-50"} p-1.5 rounded-lg flex-shrink-0`}>
                 <svg
