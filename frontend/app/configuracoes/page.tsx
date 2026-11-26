@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/mainlayout";
+import {
+  GlassView,
+  GlassButton,
+  GlassSlider,
+  GlassSwitch,
+} from "@/components/expo-glass-effect";
 import { useSoundSystem } from "@/contexts/SoundContext";
 import { SoundSettings } from "../hooks/useSoundSettings";
 import { SystemSoundEvent } from "@/services/systemSoundService";
@@ -27,7 +33,7 @@ function ToggleSwitch({
 }: ToggleSwitchProps) {
   return (
     <div
-      className={`flex items-center justify-between gap-4 py-3 ${
+      className={`flex items-center justify-between gap-4 py-3.5 transition-opacity duration-200 ${
         disabled ? "opacity-50" : ""
       }`}
     >
@@ -43,23 +49,13 @@ function ToggleSwitch({
         <p className="text-xs text-[#64748B] mt-0.5">{description}</p>
       </div>
 
-      <button
+      <GlassSwitch
         id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
+        checked={checked}
         disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:ring-offset-2 ${
-          checked ? "bg-[#4F46E5]" : "bg-slate-200"
-        } ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-            checked ? "translate-x-6" : "translate-x-1"
-          }`}
-        />
-      </button>
+        onChange={onChange}
+        ariaLabel={label}
+      />
     </div>
   );
 }
@@ -118,10 +114,12 @@ export default function ConfiguracoesPage() {
             </p>
           </div>
 
-          <button
+          <GlassButton
             type="button"
+            variant="secondary"
+            size="md"
             onClick={handleReset}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-[#E2E8F0] bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer shrink-0"
+            className="shrink-0"
           >
             <svg
               className="w-4 h-4 text-[#64748B]"
@@ -137,13 +135,15 @@ export default function ConfiguracoesPage() {
               />
             </svg>
             Restaurar padrões
-          </button>
+          </GlassButton>
         </div>
 
         {statusMessage && (
-          <div
+          <GlassView
+            glassEffectStyle="regular"
+            tintColor="emerald"
             role="status"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200"
+            className="liquid-title-enter flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl text-emerald-700"
           >
             <svg
               className="w-4 h-4 shrink-0"
@@ -159,20 +159,20 @@ export default function ConfiguracoesPage() {
               />
             </svg>
             <span>{statusMessage}</span>
-          </div>
+          </GlassView>
         )}
 
         {!isLoaded ? (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-sm text-[#64748B]">
+          <GlassView className="rounded-2xl p-8 text-sm text-[#64748B]">
             Carregando preferências salvas...
-          </div>
+          </GlassView>
         ) : (
           <div className="space-y-6">
             {/* Card 1: Sons do Sistema */}
-            <section className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
+            <GlassView className="rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200/70 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-cyan-800/10 text-[#06B6D4] flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-500/12 text-[#06B6D4] flex items-center justify-center shrink-0">
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -199,38 +199,41 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
+                  <GlassButton
                     type="button"
+                    variant="indigo"
+                    size="sm"
                     onClick={() =>
                       void handleTestEventSound("notification", "notificação")
                     }
                     disabled={!settings.systemSounds || settings.systemVolume === 0}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-200 bg-indigo-50 text-[#4F46E5] hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     Testar notificação
-                  </button>
-                  <button
+                  </GlassButton>
+                  <GlassButton
                     type="button"
+                    variant="emerald"
+                    size="sm"
                     onClick={() =>
                       void handleTestEventSound("success", "sucesso")
                     }
                     disabled={!settings.systemSounds || settings.systemVolume === 0}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     Testar sucesso
-                  </button>
-                  <button
+                  </GlassButton>
+                  <GlassButton
                     type="button"
+                    variant="danger"
+                    size="sm"
                     onClick={() => void handleTestEventSound("error", "erro")}
                     disabled={!settings.systemSounds || settings.systemVolume === 0}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     Testar erro
-                  </button>
+                  </GlassButton>
                 </div>
               </div>
 
-              <div className="px-6 py-4 divide-y divide-slate-100">
+              <div className="px-6 py-4 divide-y divide-slate-200/50">
                 <ToggleSwitch
                   id="system-sounds"
                   label="Ativar sons do sistema"
@@ -242,7 +245,7 @@ export default function ConfiguracoesPage() {
                 />
 
                 <div
-                  className={`py-4 space-y-2 ${
+                  className={`py-4 space-y-2 transition-opacity duration-200 ${
                     !settings.systemSounds ? "opacity-50" : ""
                   }`}
                 >
@@ -253,24 +256,23 @@ export default function ConfiguracoesPage() {
                     >
                       Volume global dos alertas do sistema
                     </label>
-                    <span className="text-xs font-mono font-semibold text-[#4F46E5] bg-indigo-50 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-mono font-semibold text-[#4F46E5] bg-indigo-50/90 border border-indigo-100 px-2.5 py-0.5 rounded-lg">
                       {!settings.systemSounds || settings.systemVolume === 0
                         ? "Silenciado (0%)"
                         : `${settings.systemVolume}%`}
                     </span>
                   </div>
-                  <input
+                  <GlassSlider
                     id="system-volume"
-                    type="range"
                     min={0}
                     max={100}
                     value={settings.systemVolume}
                     disabled={!settings.systemSounds}
-                    onChange={(e) => {
-                      setGlobalSystemVolume(Number(e.target.value));
+                    ariaLabel="Volume global dos alertas do sistema"
+                    onChange={(val) => {
+                      setGlobalSystemVolume(val);
                       showFeedback("Volume global atualizado.");
                     }}
-                    className="w-full accent-[#4F46E5] cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -296,12 +298,12 @@ export default function ConfiguracoesPage() {
                   }
                 />
               </div>
-            </section>
+            </GlassView>
 
             {/* Card 2: Controles do Player de Áudio */}
-            <section className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center shrink-0">
+            <GlassView className="rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200/70 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/12 text-[#4F46E5] flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -327,7 +329,7 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
 
-              <div className="px-6 py-4 divide-y divide-slate-100">
+              <div className="px-6 py-4 divide-y divide-slate-200/50">
                 <div className="py-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <label
@@ -336,21 +338,20 @@ export default function ConfiguracoesPage() {
                     >
                       Volume padrão do player
                     </label>
-                    <span className="text-xs font-mono font-semibold text-[#4F46E5] bg-indigo-50 px-2 py-0.5 rounded-md">
-                      {settings.muted ? "Silenciado (0%)" : `${settings.volume}%`}
+                    <span className="text-xs font-mono font-semibold text-[#4F46E5] bg-indigo-50/90 border border-indigo-100 px-2.5 py-0.5 rounded-lg">
+                      {settings.muted
+                        ? "Silenciado (0%)"
+                        : `${settings.volume}%`}
                     </span>
                   </div>
-                  <input
+                  <GlassSlider
                     id="player-volume"
-                    type="range"
                     min={0}
                     max={100}
                     value={settings.volume}
                     disabled={settings.muted}
-                    onChange={(e) =>
-                      handleUpdate({ volume: Number(e.target.value) })
-                    }
-                    className="w-full accent-[#4F46E5] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    ariaLabel="Volume padrão do player"
+                    onChange={(val) => handleUpdate({ volume: val })}
                   />
                 </div>
 
@@ -367,18 +368,17 @@ export default function ConfiguracoesPage() {
                     {PLAYBACK_RATES.map((rate) => {
                       const isSelected = settings.playbackRate === rate;
                       return (
-                        <button
+                        <GlassButton
                           key={rate}
                           type="button"
+                          variant="secondary"
+                          size="sm"
+                          isActive={isSelected}
                           onClick={() => handleUpdate({ playbackRate: rate })}
-                          className={`px-3.5 py-1.5 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${
-                            isSelected
-                              ? "bg-[#4F46E5] text-white border-[#4F46E5] shadow-xs"
-                              : "bg-white text-slate-700 border-[#E2E8F0] hover:bg-slate-50"
-                          }`}
+                          className="px-3.5 py-1.5 text-sm"
                         >
                           {rate}x {rate === 1 ? "(Normal)" : ""}
-                        </button>
+                        </GlassButton>
                       );
                     })}
                   </div>
@@ -408,12 +408,12 @@ export default function ConfiguracoesPage() {
                   onChange={(checked) => handleUpdate({ loop: checked })}
                 />
               </div>
-            </section>
+            </GlassView>
 
             {/* Card 3: Preferências do Usuário */}
-            <section className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-100 text-[#64748B] flex items-center justify-center shrink-0">
+            <GlassView className="rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200/70 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-slate-200/70 text-[#64748B] flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -439,7 +439,7 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
 
-              <div className="px-6 py-4 divide-y divide-slate-100">
+              <div className="px-6 py-4 divide-y divide-slate-200/50">
                 <ToggleSwitch
                   id="keyboard-shortcuts"
                   label="Atalhos de teclado na rotulação"
@@ -460,7 +460,7 @@ export default function ConfiguracoesPage() {
                   }
                 />
               </div>
-            </section>
+            </GlassView>
           </div>
         )}
       </div>
