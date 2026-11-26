@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { uploadAudio, AudioRecord } from "@/services/audioService";
 import { useSoundSystem } from "@/contexts/SoundContext";
+import { GlassButton } from "@/components/expo-glass-effect";
 
 interface AddAudioButtonProps {
   onUploadSuccess?: (audios: AudioRecord[]) => void;
@@ -44,14 +45,16 @@ export default function AddAudioButton({ onUploadSuccess }: AddAudioButtonProps)
 
   return (
     <div>
-      <button
+      <GlassButton
         type="button"
+        variant="primary"
+        size="md"
         onClick={handleClick}
         disabled={isUploading}
-        className="bg-[#4F46E5] hover:bg-[#4338CA] disabled:opacity-60 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer"
+        className="whitespace-nowrap"
       >
         {isUploading ? "Enviando..." : "+ Adicionar áudios"}
-      </button>
+      </GlassButton>
 
       <input
         type="file"
